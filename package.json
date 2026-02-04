@@ -1,5 +1,5 @@
 {
-  "name": "confluence-mcp",
+  "name": "@vinhnguyen/confluence-mcp",
   "version": "1.0.0",
   "description": "MCP server for Confluence - read, create, update, delete pages and manage spaces",
   "main": "index.js",
@@ -7,19 +7,66 @@
   "bin": {
     "confluence-mcp": "./index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vinhnguyen/confluence-mcp.git"
+  },
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "semantic-release": "semantic-release"
   },
   "keywords": [
     "mcp",
     "confluence",
     "atlassian",
-    "model-context-protocol"
+    "model-context-protocol",
+    "claude",
+    "ai",
+    "llm"
   ],
-  "author": "",
+  "author": "Vinh Nguyen",
   "license": "MIT",
+  "homepage": "https://github.com/vinhnguyen/confluence-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/vinhnguyen/confluence-mcp/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "html-to-text": "^9.0.5"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^5.0.1",
+    "@semantic-release/git": "^7.0.18",
+    "semantic-release": "^15.9.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "index.js",
+    "README.md"
+  ],
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json",
+            "package-lock.json",
+            "CHANGELOG.md"
+          ],
+          "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        }
+      ],
+      "@semantic-release/github"
+    ]
   }
 }
