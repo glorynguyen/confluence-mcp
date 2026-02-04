@@ -1,0 +1,25 @@
+{
+  "name": "confluence-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Confluence - read, create, update, delete pages and manage spaces",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "confluence-mcp": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "mcp",
+    "confluence",
+    "atlassian",
+    "model-context-protocol"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "html-to-text": "^9.0.5"
+  }
+}
