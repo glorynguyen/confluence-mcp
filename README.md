@@ -14,14 +14,29 @@ A Model Context Protocol (MCP) server that provides tools for interacting with C
 
 ## Installation
 
+### Using npx (recommended, no install required)
+
+No installation needed! Just configure Claude Desktop or Claude Code as shown below.
+
+### Global Installation
+
 ```bash
+npm install -g @vinhnguyen/confluence-mcp
+```
+
+### From Source
+
+```bash
+git clone https://github.com/vinhnguyen/confluence-mcp.git
 cd confluence-mcp
 npm install
 ```
 
 ## Configuration
 
-The MCP server requires three environment variables:
+### Prerequisites
+
+The MCP server requires Atlassian credentials:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
@@ -35,9 +50,49 @@ The MCP server requires three environment variables:
 2. Click "Create API token"
 3. Give it a label and copy the token
 
-## Usage with Claude Code
+### Claude Desktop
 
-Add to your Claude Code MCP settings (`~/.claude/claude_desktop_config.json` or project settings):
+Add the server to your Claude Desktop configuration file:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+Using npx (recommended, no install required):
+
+```json
+{
+  "mcpServers": {
+    "confluence": {
+      "command": "npx",
+      "args": ["-y", "@vinhnguyen/confluence-mcp"],
+      "env": {
+        "ATLASSIAN_EMAIL": "your.email@company.com",
+        "ATLASSIAN_API_TOKEN": "your_api_token",
+        "ATLASSIAN_DOMAIN": "your-domain.atlassian.net"
+      }
+    }
+  }
+}
+```
+
+Or if installed globally via npm:
+
+```json
+{
+  "mcpServers": {
+    "confluence": {
+      "command": "confluence-mcp",
+      "env": {
+        "ATLASSIAN_EMAIL": "your.email@company.com",
+        "ATLASSIAN_API_TOKEN": "your_api_token",
+        "ATLASSIAN_DOMAIN": "your-domain.atlassian.net"
+      }
+    }
+  }
+}
+```
+
+Or from source:
 
 ```json
 {
@@ -54,6 +109,55 @@ Add to your Claude Code MCP settings (`~/.claude/claude_desktop_config.json` or 
   }
 }
 ```
+
+### Claude Code
+
+Add to your `~/.claude.json` (project) or `~/.claude/settings.json` (global):
+
+Using npx (recommended):
+
+```json
+{
+  "mcpServers": {
+    "confluence": {
+      "command": "npx",
+      "args": ["-y", "@vinhnguyen/confluence-mcp"],
+      "env": {
+        "ATLASSIAN_EMAIL": "your.email@company.com",
+        "ATLASSIAN_API_TOKEN": "your_api_token",
+        "ATLASSIAN_DOMAIN": "your-domain.atlassian.net"
+      }
+    }
+  }
+}
+```
+
+Or if installed globally:
+
+```json
+{
+  "mcpServers": {
+    "confluence": {
+      "command": "confluence-mcp",
+      "env": {
+        "ATLASSIAN_EMAIL": "your.email@company.com",
+        "ATLASSIAN_API_TOKEN": "your_api_token",
+        "ATLASSIAN_DOMAIN": "your-domain.atlassian.net"
+      }
+    }
+  }
+}
+```
+
+**Restart Claude Desktop or Claude Code after updating the config.**
+
+## Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `ATLASSIAN_EMAIL` | Your Atlassian account email | Yes |
+| `ATLASSIAN_API_TOKEN` | API token from Atlassian | Yes |
+| `ATLASSIAN_DOMAIN` | Your Confluence domain (e.g., `company.atlassian.net`) | Yes |
 
 ## Available Tools
 
