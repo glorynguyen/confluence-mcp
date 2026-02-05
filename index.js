@@ -204,11 +204,147 @@ class ConfluenceClient {
     };
   }
 
+  // Auto-versioning update: fetches current version automatically
+  async updatePageAuto(pageId, newTitle = null, newBody = null) {
+    // Fetch current page to get version and existing data
+    const currentPage = await this.getPage(pageId);
+
+    if (!currentPage) {
+      throw new Error(`Page with ID ${pageId} not found`);
+    }
+
+    const title = newTitle || currentPage.title;
+    const content = newBody || currentPage.content;
+    const currentVersion = currentPage.version;
+
+    return this.updatePage(pageId, title, content, currentVersion);
+  }
+
   async deletePage(pageId) {
     await this.request(`/wiki/rest/api/content/${pageId}`, {
       method: "DELETE",
     });
     return { success: true, deletedPageId: pageId };
+  }
+
+  // List immediate child pages (using API v2 for better pagination)
+  async listChildPages(pageId, limit = 50) {
+    const allChildren = [];
+    let nextUrl = `/wiki/api/v2/pages/${pageId}/children?limit=${limit}`;
+
+    while (nextUrl) {
+      const url = nextUrl.startsWith("http")
+        ? nextUrl
+        : `${this.baseUrl}${nextUrl}`;
+      const data = await this.request(url);
+
+      if (data.results) {
+        allChildren.push(
+          ...data.results.map((page) => ({
+            id: page.id,
+            title: page.title,
+            status: page.status,
+            parentId: page.parentId,
+            spaceId: page.spaceId,
+          }))
+        );
+      }
+
+      nextUrl = data._links?.next || null;
+    }
+
+    return {
+      parentPageId: pageId,
+      childCount: allChildren.length,
+      children: allChildren,
+    };
+  }
+
+  // Move a page to a new parent (restructure hierarchy)
+  async movePage(pageId, newParentId) {
+    // First, get current page details
+    const currentPage = await this.request(
+      `/wiki/rest/api/content/${pageId}?expand=version,space,ancestors`
+    );
+
+    if (!currentPage) {
+      throw new Error(`Page with ID ${pageId} not found`);
+    }
+
+    // Update page with new parent (ancestors)
+    const body = {
+      type: "page",
+      title: currentPage.title,
+      ancestors: [{ id: newParentId }],
+      version: {
+        number: currentPage.version.number + 1,
+      },
+    };
+
+    const data = await this.request(`/wiki/rest/api/content/${pageId}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+
+    return {
+      id: data.id,
+      title: data.title,
+      newParentId: newParentId,
+      version: data.version?.number,
+      webUrl: data._links?.webui
+        ? `${this.baseUrl}/wiki${data._links.webui}`
+        : null,
+    };
+  }
+
+  // Manage labels: add or remove multiple labels at once
+  async manageLabels(pageId, action, labels) {
+    if (!Array.isArray(labels) || labels.length === 0) {
+      throw new Error("Labels must be a non-empty array");
+    }
+
+    const results = {
+      pageId,
+      action,
+      processed: [],
+      errors: [],
+    };
+
+    if (action === "add") {
+      // Add all labels at once
+      const labelData = labels.map((name) => ({ name, prefix: "global" }));
+      try {
+        const data = await this.request(
+          `/wiki/rest/api/content/${pageId}/label`,
+          {
+            method: "POST",
+            body: JSON.stringify(labelData),
+          }
+        );
+        results.processed = data.results.map((label) => label.name);
+      } catch (error) {
+        results.errors.push({ labels, error: error.message });
+      }
+    } else if (action === "remove") {
+      // Remove labels one by one (API limitation)
+      for (const labelName of labels) {
+        try {
+          await this.request(
+            `/wiki/rest/api/content/${pageId}/label/${labelName}`,
+            {
+              method: "DELETE",
+            }
+          );
+          results.processed.push(labelName);
+        } catch (error) {
+          results.errors.push({ label: labelName, error: error.message });
+        }
+      }
+    } else {
+      throw new Error(`Invalid action: ${action}. Use 'add' or 'remove'.`);
+    }
+
+    return results;
   }
 
   // -------------------------------------------------------------------------
@@ -550,6 +686,94 @@ const TOOLS = [
       required: ["pageId"],
     },
   },
+  {
+    name: "confluence_update_page_auto",
+    description:
+      "Update an existing Confluence page with automatic version handling. Fetches the current version automatically so you don't need to provide it. You can update title, body, or both.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        pageId: {
+          type: "string",
+          description: "The ID of the page to update",
+        },
+        newTitle: {
+          type: "string",
+          description: "The new title for the page (optional - keeps existing title if not provided)",
+        },
+        newBody: {
+          type: "string",
+          description: "The new content in Confluence storage format (XHTML). Optional - keeps existing content if not provided.",
+        },
+      },
+      required: ["pageId"],
+    },
+  },
+  {
+    name: "confluence_list_child_pages",
+    description:
+      "List all immediate child pages of a parent page (folder contents view). Returns page IDs, titles, and status for each child.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        pageId: {
+          type: "string",
+          description: "The ID of the parent page to list children from",
+        },
+        limit: {
+          type: "number",
+          description: "Maximum number of children per API request (default: 50). Pagination is handled automatically.",
+        },
+      },
+      required: ["pageId"],
+    },
+  },
+  {
+    name: "confluence_move_page",
+    description:
+      "Move a page to a new parent, restructuring the page hierarchy. The page will become a child of the specified new parent page.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        pageId: {
+          type: "string",
+          description: "The ID of the page to move",
+        },
+        newParentId: {
+          type: "string",
+          description: "The ID of the new parent page",
+        },
+      },
+      required: ["pageId", "newParentId"],
+    },
+  },
+  {
+    name: "confluence_manage_labels",
+    description:
+      "Add or remove multiple labels from a page in a single operation. Use action 'add' to add labels or 'remove' to remove them.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        pageId: {
+          type: "string",
+          description: "The ID of the page to manage labels on",
+        },
+        action: {
+          type: "string",
+          enum: ["add", "remove"],
+          description: "The action to perform: 'add' to add labels, 'remove' to remove labels",
+        },
+        labels: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+          description: "Array of label names to add or remove",
+        },
+      },
+      required: ["pageId", "action", "labels"],
+    },
+  },
 
   // Space Operations
   {
@@ -845,6 +1069,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "confluence_delete_page":
         result = await client.deletePage(args.pageId);
+        break;
+
+      case "confluence_update_page_auto":
+        result = await client.updatePageAuto(
+          args.pageId,
+          args.newTitle,
+          args.newBody
+        );
+        break;
+
+      case "confluence_list_child_pages":
+        result = await client.listChildPages(args.pageId, args.limit);
+        break;
+
+      case "confluence_move_page":
+        result = await client.movePage(args.pageId, args.newParentId);
+        break;
+
+      case "confluence_manage_labels":
+        result = await client.manageLabels(args.pageId, args.action, args.labels);
         break;
 
       // Space Operations

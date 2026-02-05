@@ -54,7 +54,10 @@ Required for operation:
 | `confluence_get_child_pages` | Get all child pages (handles pagination) |
 | `confluence_create_page` | Create new page in a space |
 | `confluence_update_page` | Update existing page (requires version number) |
+| `confluence_update_page_auto` | Update page with automatic version handling (no version required) |
 | `confluence_delete_page` | Delete page (moves to trash) |
+| `confluence_list_child_pages` | List immediate child pages (folder contents view) |
+| `confluence_move_page` | Move page to a new parent (restructure hierarchy) |
 
 ### Space Operations
 | Tool | Description |
@@ -76,6 +79,7 @@ Required for operation:
 | `confluence_get_page_labels` | Get labels on a page |
 | `confluence_add_page_label` | Add label to page |
 | `confluence_remove_page_label` | Remove label from page |
+| `confluence_manage_labels` | Add or remove multiple labels in one operation |
 | `confluence_get_page_comments` | Get page comments |
 | `confluence_add_page_comment` | Add comment to page |
 | `confluence_get_page_attachments` | List page attachments |
@@ -108,6 +112,11 @@ Required for operation:
 - `updatePage()` requires current version number
 - Increments version by 1 automatically
 - Get current version via `getPage()` first
+- `updatePageAuto()` handles version fetching automatically
+
+### Page Hierarchy
+- `movePage()` uses ancestors array to restructure page hierarchy
+- `listChildPages()` uses API v2 for efficient pagination
 
 ## Common Development Tasks
 
