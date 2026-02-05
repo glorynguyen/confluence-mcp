@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/vinhnguyen/confluence-mcp.git"
+    "url": "https://github.com/glorynguyen/confluence-mcp.git"
   },
   "scripts": {
     "start": "node index.js",
@@ -26,9 +26,9 @@
   ],
   "author": "Vinh Nguyen",
   "license": "MIT",
-  "homepage": "https://github.com/vinhnguyen/confluence-mcp#readme",
+  "homepage": "https://github.com/glorynguyen/confluence-mcp#readme",
   "bugs": {
-    "url": "https://github.com/vinhnguyen/confluence-mcp/issues"
+    "url": "https://github.com/glorynguyen/confluence-mcp/issues"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
