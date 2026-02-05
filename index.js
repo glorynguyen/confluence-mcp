@@ -538,6 +538,77 @@ class ConfluenceClient {
       fullContent: content,
     };
   }
+
+  // -------------------------------------------------------------------------
+  // Get page with children
+  // -------------------------------------------------------------------------
+
+  async getPageWithChildren(pageId, includeFullContent = false) {
+    // Fetch the parent page
+    const parentPage = await this.getPage(pageId);
+
+    // Fetch child pages (using existing getChildPages method which handles pagination)
+    let childPages = [];
+    try {
+      childPages = await this.getChildPages(pageId);
+    } catch (error) {
+      // If fetching children fails (e.g., no children or permission issues), continue with empty array
+      childPages = [];
+    }
+
+    // If includeFullContent is true, fetch full content for each child page
+    let childPagesWithContent = [];
+    if (includeFullContent && childPages.length > 0) {
+      childPagesWithContent = await Promise.all(
+        childPages.map(async (child) => {
+          try {
+            const fullChild = await this.getPage(child.id);
+            return {
+              id: fullChild.id,
+              title: fullChild.title,
+              spaceKey: fullChild.spaceKey,
+              version: fullChild.version,
+              content: fullChild.content,
+              contentAsText: fullChild.contentAsText,
+              webUrl: fullChild.webUrl,
+            };
+          } catch (error) {
+            // If fetching a child fails, return basic info with error
+            return {
+              id: child.id,
+              title: child.title,
+              status: child.status,
+              error: `Failed to fetch content: ${error.message}`,
+            };
+          }
+        })
+      );
+    } else {
+      // Just return basic info (id, title, status)
+      childPagesWithContent = childPages.map((child) => ({
+        id: child.id,
+        title: child.title,
+        status: child.status,
+      }));
+    }
+
+    return {
+      parent: {
+        id: parentPage.id,
+        title: parentPage.title,
+        spaceKey: parentPage.spaceKey,
+        version: parentPage.version,
+        content: parentPage.content,
+        contentAsText: parentPage.contentAsText,
+        webUrl: parentPage.webUrl,
+      },
+      childPages: {
+        count: childPagesWithContent.length,
+        includeFullContent,
+        pages: childPagesWithContent,
+      },
+    };
+  }
 }
 
 // ============================================================================
@@ -1019,6 +1090,26 @@ const TOOLS = [
       required: ["pageId"],
     },
   },
+  {
+    name: "confluence_get_page_with_children",
+    description:
+      "Get a Confluence page along with all its immediate child pages in a single request. Returns the parent page content followed by a list of child pages. Optionally fetches full content for each child page.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        pageId: {
+          type: "string",
+          description: "The ID of the parent page to retrieve",
+        },
+        includeFullContent: {
+          type: "boolean",
+          description:
+            "If true, fetch full content for each child page. If false (default), only return child page IDs and titles.",
+        },
+      },
+      required: ["pageId"],
+    },
+  },
 ];
 
 // ============================================================================
@@ -1155,6 +1246,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // Special Operations
       case "confluence_extract_done_sections":
         result = await client.extractDoneSections(args.pageId);
+        break;
+
+      case "confluence_get_page_with_children":
+        result = await client.getPageWithChildren(
+          args.pageId,
+          args.includeFullContent || false
+        );
         break;
 
       default:

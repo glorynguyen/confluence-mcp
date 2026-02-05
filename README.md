@@ -5,7 +5,7 @@ A Model Context Protocol (MCP) server that provides tools for interacting with C
 ## Features
 
 - **Page Operations**: Get, create, update, delete pages
-- **Page Hierarchy**: Move pages, list child pages
+- **Page Hierarchy**: Move pages, list child pages, get page with children
 - **Space Operations**: List spaces, get space details, browse space content
 - **Search**: Full CQL support, search by text or title
 - **Labels**: Get, add, remove, and batch manage page labels
@@ -169,6 +169,7 @@ Or if installed globally:
 | `confluence_get_page` | Get page details including content, version, metadata |
 | `confluence_get_page_content` | Get page content as text or HTML |
 | `confluence_get_child_pages` | Get all child pages of a parent (with pagination) |
+| `confluence_get_page_with_children` | Get a page along with all its immediate child pages |
 | `confluence_list_child_pages` | List immediate child pages (folder contents view) |
 | `confluence_create_page` | Create a new page in a space |
 | `confluence_update_page` | Update an existing page (requires version number) |
