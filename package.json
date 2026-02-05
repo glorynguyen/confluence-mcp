@@ -1,6 +1,6 @@
 {
   "name": "@vinhnguyen/confluence-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "MCP server for Confluence - read, create, update, delete pages and manage spaces",
   "main": "index.js",
   "type": "module",

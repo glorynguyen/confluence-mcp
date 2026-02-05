@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/glorynguyen/confluence-mcp/compare/v1.0.0...v1.1.0) (2026-02-05)
+
+
+### Features
+
+* **page:** Add tool to get page with children ([933efe0](https://github.com/glorynguyen/confluence-mcp/commit/933efe0e05565669375f30c7b12ad1bedd787bdc))
+
 # 1.0.0 (2026-02-05)
 
 
