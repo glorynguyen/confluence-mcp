@@ -28,7 +28,7 @@ npm install -g @vinhnguyen/confluence-mcp
 ### From Source
 
 ```bash
-git clone https://github.com/vinhnguyen/confluence-mcp.git
+git clone https://github.com/glorynguyen/confluence-mcp.git
 cd confluence-mcp
 npm install
 ```
